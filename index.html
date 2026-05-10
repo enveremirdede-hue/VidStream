@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidStream | Ultimate Full Sürüm (Düzeltilmiş)</title>
+    <title>VidStream | Ultimate Full Sürüm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -29,11 +29,11 @@
         .nav-link:hover, .nav-link.active { background: var(--hover); }
         .content { margin-left: var(--sidebar-w); padding: 24px; width: calc(100% - var(--sidebar-w)); }
         
-        /* Video Grid */
+        /* Video Grids */
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; } 
         .v-card { cursor: pointer; transition: 0.2s; }
         .v-card:hover { transform: scale(1.02); }
-        .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; object-fit: cover; background: #222; }
         .v-info { display: flex; gap: 12px; margin-top: 12px; }
         .v-avatar { width: 36px; height: 36px; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
         
@@ -62,14 +62,15 @@
         .shorts-feed { display: flex; flex-direction: column; align-items: center; gap: 30px; height: calc(100vh - 100px); overflow-y: scroll; scroll-snap-type: y mandatory; }
         .short-wrapper { width: 400px; height: 80vh; scroll-snap-align: start; position: relative; background: #000; border-radius: 15px; overflow: hidden; display: flex; align-items: center; }
         .short-wrapper video { width: 100%; height: 100%; object-fit: cover; aspect-ratio: 9/16; border-radius: 15px; }
-        .short-info { position: absolute; bottom: 20px; left: 20px; right: 80px; text-shadow: 1px 1px 3px black; }
+        .short-info { position: absolute; bottom: 50px; left: 20px; right: 80px; text-shadow: 1px 1px 3px black; z-index: 10; pointer-events: none; }
+        .short-info h3, .short-info p { pointer-events: auto; }
 
         /* Modals & Upload Progress */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
         .modal-box { background: #282828; padding: 30px; border-radius: 15px; width: 400px; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; background: #121212; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
         .progress-container { width: 100%; background: #444; border-radius: 10px; height: 10px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: var(--accent); border-radius: 10px; transition: 0.3s; }
+        .progress-bar { width: 0%; height: 100%; background: var(--accent); border-radius: 10px; transition: 0.1s linear; }
     </style>
 </head>
 <body>
@@ -88,7 +89,8 @@
             <div class="nav-link active" onclick="goHome()"><i class="fas fa-home"></i> Ana Sayfa</div>
             <div class="nav-link" onclick="showShorts()"><i class="fas fa-bolt"></i> Shorts</div>
             <div class="nav-link" onclick="showExplore()"><i class="fas fa-compass"></i> Keşfet</div>
-            <div class="nav-link" onclick="showSubscriptions()"><i class="fas fa-layer-group"></i> Abonelikler</div> <hr style="border: 0.5px solid #333; margin: 15px 0;">
+            <div class="nav-link" onclick="showSubscriptions()"><i class="fas fa-layer-group"></i> Abonelikler</div>
+            <hr style="border: 0.5px solid #333; margin: 15px 0;">
             <div class="nav-link" onclick="showHistory()"><i class="fas fa-history"></i> Geçmiş</div>
             <div class="nav-link" onclick="showMyChannel()"><i class="fas fa-user"></i> Kanalım</div>
         </aside>
@@ -112,7 +114,7 @@
                                 <h3 id="p-uploader-name" style="color: white; font-size: 16px; cursor:pointer;" onclick="openChannel(this.innerText)"></h3>
                                 <p id="p-views" style="color: #aaa; font-size: 14px;"></p>
                             </div>
-                            <button class="btn-sub" id="playerSubBtn" style="margin-left: 20px; display:none;" onclick="toggleSubFromPlayer()">Abone Ol</button>
+                            <button class="btn-sub" id="playerSubBtn" style="margin-left: 20px;" onclick="toggleSubFromPlayer()">Abone Ol</button>
                         </div>
                         <div class="action-buttons">
                             <button class="action-btn" onclick="likeVideo()"><i class="fas fa-thumbs-up"></i> <span id="p-likes">0</span></button>
@@ -139,8 +141,12 @@
                         <button class="btn-sub" id="channelSubBtn" onclick="toggleSubFromChannel()">Abone Ol</button>
                     </div>
                 </div>
-                <h3 style="margin-bottom: 20px; border-bottom: 2px solid white; display: inline-block; padding-bottom: 5px;">Videolar</h3>
+                
+                <h3 id="ch-vids-title" style="margin-bottom: 20px; border-bottom: 2px solid white; display: inline-block; padding-bottom: 5px;">Videolar</h3>
                 <div class="video-grid" id="channelGrid"></div>
+
+                <h3 id="ch-shorts-title" style="margin-top: 30px; margin-bottom: 20px; border-bottom: 2px solid white; display: inline-block; padding-bottom: 5px; display: none;">Shorts</h3>
+                <div class="shorts-grid" id="channelShortsGrid"></div>
             </div>
         </main>
     </div>
@@ -153,7 +159,8 @@
             <input type="file" id="upFile" accept="video/*">
             <button class="btn" id="upBtn" style="width: 100%;" onclick="processUpload()">Yüklemeyi Başlat</button>
             <div class="progress-container" id="pContainer"><div class="progress-bar" id="pBar"></div></div>
-            <p id="status-msg" style="margin-top: 10px; font-size: 14px; text-align: center; color:var(--accent);"></p>
+            <p id="pDetails" style="margin-top: 10px; font-size: 13px; text-align: center; color:#aaa; font-weight: bold;"></p>
+            <p id="status-msg" style="margin-top: 5px; font-size: 14px; text-align: center; color:var(--accent);"></p>
             <button onclick="closeModals()" class="btn-outline" style="width: 100%; margin-top: 10px; border:none;">İptal</button>
         </div>
     </div>
@@ -171,16 +178,12 @@
         let currentPlayingId = null;
         let currentVideoUploader = "";
         let currentChannelView = "";
+        let viewedShorts = new Set(); 
 
-        // Enter tuşuyla arama yapma eklentisi
         document.getElementById("searchInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                searchVideos();
-            }
+            if (event.key === "Enter") { event.preventDefault(); searchVideos(); }
         });
 
-        // AUTH
         function updateAuthUI() {
             const authArea = document.getElementById('auth-section');
             if (currentUser) {
@@ -209,7 +212,7 @@
 
         function handleLogout() { currentUser = null; localStorage.removeItem('vs_user'); location.reload(); }
 
-        // VİDEOLAR
+        // VİDEOLAR VE KAPAK FOTOĞRAFI
         async function fetchVideos() {
             const { data } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
             allVideos = data || [];
@@ -219,15 +222,13 @@
         function renderVideos(videoArray, containerId, title = "") {
             const titleEl = document.getElementById('page-title');
             if(titleEl) { titleEl.style.display = title ? 'block' : 'none'; titleEl.innerText = title; }
+            if (videoArray.length === 0) { document.getElementById(containerId).innerHTML = `<p style="color:#aaa; font-size:18px;">Burası çok ıssız... Video bulunamadı.</p>`; return; }
             
-            if (videoArray.length === 0) {
-                document.getElementById(containerId).innerHTML = `<p style="color:#aaa; font-size:18px;">Burası çok ıssız... Video bulunamadı.</p>`;
-                return;
-            }
-
             document.getElementById(containerId).innerHTML = videoArray.map(v => `
                 <div class="v-card">
-                    <img class="v-thumb" src="https://picsum.photos/seed/${v.id}/400/225" onclick="openVideo('${v.id}')">
+                    <div style="position:relative; width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#222; cursor:pointer;" onclick="openVideo('${v.id}')">
+                        <video src="${v.video_url}#t=0.1" preload="metadata" muted playsinline style="width:100%; height:100%; object-fit:cover; pointer-events:none;"></video>
+                    </div>
                     <div class="v-info">
                         <div class="v-avatar" style="background:${stringToColor(v.uploader)}" onclick="openChannel('${v.uploader}')">${v.uploader[0].toUpperCase()}</div>
                         <div><h3 onclick="openVideo('${v.id}')">${v.title}</h3><p style="cursor:pointer;" onclick="openChannel('${v.uploader}')">${v.uploader}</p><p>${v.views || 0} izlenme</p></div>
@@ -236,7 +237,25 @@
             `).join('');
         }
 
-        // YÜKLEME
+        function renderChannelShorts(shortsArray, containerId) {
+            const container = document.getElementById(containerId);
+            const titleEl = document.getElementById('ch-shorts-title');
+            if(shortsArray.length === 0) { container.innerHTML = ''; titleEl.style.display = 'none'; return; }
+            
+            titleEl.style.display = 'inline-block';
+            container.innerHTML = shortsArray.map(v => `
+                <div class="v-card" onclick="showShorts('${v.id}')">
+                    <div style="position:relative; width:100%; aspect-ratio:9/16; border-radius:12px; overflow:hidden; background:#222;">
+                        <video src="${v.video_url}#t=0.1" preload="metadata" muted playsinline style="width:100%; height:100%; object-fit:cover; pointer-events:none;"></video>
+                    </div>
+                    <div class="v-info" style="margin-top:8px;">
+                        <div><h3 style="font-size:14px;">${v.title}</h3><p style="color:#aaa; font-size:12px;">${v.views || 0} izlenme</p></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // YENİ CANLI İLERLEME SİSTEMİ (MB & Kalan Süre)
         async function processUpload() {
             if(!currentUser) return alert("Önce giriş yapmalısın!");
             const file = document.getElementById('upFile').files[0];
@@ -246,22 +265,83 @@
             const msg = document.getElementById('status-msg');
             const pBar = document.getElementById('pBar');
             const pContainer = document.getElementById('pContainer');
-
+            const pDetails = document.getElementById('pDetails');
+            
             if(!file || !title) return alert("Dosya ve başlık seçin!");
-            btn.disabled = true; pContainer.style.display = "block"; msg.innerText = "Yükleniyor, lütfen sekmeyi kapatmayın...";
+            
+            btn.disabled = true; 
+            pContainer.style.display = "block"; 
+            msg.innerText = "Sunucuya bağlanılıyor...";
+            pDetails.innerText = "0 MB / 0 MB (Hesaplanıyor...)";
+            pBar.style.width = "0%";
 
-            try {
-                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-                const { error } = await supabaseClient.storage.from('videos').upload(fileName, file, { cacheControl: '3600', upsert: false });
-                if (error) throw error;
-                
-                pBar.style.width = "100%"; msg.innerText = "Sisteme kaydediliyor...";
-                const { data: urlData } = supabaseClient.storage.from('videos').getPublicUrl(fileName);
-                await supabaseClient.from('videos').insert([{ title, video_url: urlData.publicUrl, uploader: currentUser.username, views: 0, likes: 0, type }]);
-                
-                alert("Başarıyla Yüklendi!"); location.reload();
-            } catch (e) { alert("Yükleme Hatası: " + e.message); } 
-            finally { btn.disabled = false; msg.innerText = ""; pContainer.style.display = "none"; pBar.style.width = "0%"; }
+            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+            const url = `${supabaseUrl}/storage/v1/object/videos/${fileName}`;
+            
+            const xhr = new XMLHttpRequest();
+            const startTime = Date.now();
+
+            // Yükleme sırasında tetiklenen alan (Canlı İlerleme)
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percent = (event.loaded / event.total) * 100;
+                    pBar.style.width = percent + "%";
+                    
+                    const loadedMB = (event.loaded / (1024 * 1024)).toFixed(2);
+                    const totalMB = (event.total / (1024 * 1024)).toFixed(2);
+                    
+                    const elapsedTime = (Date.now() - startTime) / 1000; // geçen süre (saniye)
+                    const bps = event.loaded / elapsedTime; // byte/saniye (hız)
+                    const remainingBytes = event.total - event.loaded;
+                    const remainingSecs = Math.max(0, Math.floor(remainingBytes / bps));
+                    
+                    let timeStr = "";
+                    if(remainingSecs > 60) {
+                        timeStr = `${Math.floor(remainingSecs / 60)} dk ${remainingSecs % 60} sn`;
+                    } else {
+                        timeStr = `${remainingSecs} sn`;
+                    }
+                    
+                    pDetails.innerText = `${loadedMB} MB / ${totalMB} MB yüklendi. (Kalan Süre: ${timeStr})`;
+                }
+            };
+
+            // Yükleme başarılı olduğunda
+            xhr.onload = async function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    pBar.style.width = "100%"; 
+                    pDetails.innerText = "Dosya gönderildi! İşleniyor...";
+                    msg.innerText = "Veritabanına kaydediliyor...";
+                    
+                    const { data: urlData } = supabaseClient.storage.from('videos').getPublicUrl(fileName);
+                    await supabaseClient.from('videos').insert([{ title, video_url: urlData.publicUrl, uploader: currentUser.username, views: 0, likes: 0, type }]);
+                    
+                    alert("Başarıyla Yüklendi!"); 
+                    location.reload();
+                } else {
+                    msg.innerText = "Yükleme Hatası!";
+                    pDetails.innerText = "";
+                    alert("Sunucu reddetti, lütfen tekrar deneyin.");
+                    resetUploadUI();
+                }
+            };
+
+            // İnternet kopması vs durumu
+            xhr.onerror = function() {
+                alert("Bağlantı koptu! Yükleme başarısız.");
+                resetUploadUI();
+            };
+
+            // İsteği başlat ve dosyayı yolla
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
+            xhr.setRequestHeader('apikey', supabaseKey);
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            xhr.send(file);
+            
+            function resetUploadUI() {
+                btn.disabled = false; msg.innerText = ""; pContainer.style.display = "none"; pBar.style.width = "0%"; pDetails.innerText = "";
+            }
         }
 
         // VİDEO İZLEME
@@ -269,15 +349,12 @@
             currentPlayingId = id;
             const v = allVideos.find(v => v.id === id);
             currentVideoUploader = v.uploader;
-            
-            // Geçmişe ekle
             watchHistory = watchHistory.filter(h => h.id !== id);
             watchHistory.unshift(v);
             if(watchHistory.length > 20) watchHistory.pop();
             localStorage.setItem('vs_history', JSON.stringify(watchHistory));
 
             hideAll(); document.getElementById('player-page').style.display = 'block';
-            
             document.getElementById('mainVideo').src = v.video_url;
             document.getElementById('p-title').innerText = v.title;
             document.getElementById('p-uploader-name').innerText = v.uploader;
@@ -286,63 +363,51 @@
             document.getElementById('p-avatar').style.background = stringToColor(v.uploader);
             document.getElementById('p-avatar').innerText = v.uploader[0].toUpperCase();
 
-            // Oynatıcıdaki Abone Butonunu Güncelle
             await updateSubButtonUI(currentVideoUploader, 'playerSubBtn');
-
             await supabaseClient.from('videos').update({ views: (v.views || 0) + 1 }).eq('id', id);
             fetchComments(id); window.scrollTo(0,0);
         }
 
-        // KANAL VE ABONELİK (ORTAK FONKSİYONLAR)
+        // KANAL VE ABONELİK
         async function openChannel(username) {
             hideAll(); document.getElementById('channel-page').style.display = 'block';
             currentChannelView = username;
-            
             document.getElementById('ch-name').innerText = username;
             document.getElementById('ch-avatar').style.background = stringToColor(username);
             document.getElementById('ch-avatar').innerText = username[0].toUpperCase();
-
+            
             const userVids = allVideos.filter(v => v.uploader === username && v.type !== 'short');
-            const totalViews = userVids.reduce((sum, v) => sum + (v.views || 0), 0);
+            const userShorts = allVideos.filter(v => v.uploader === username && v.type === 'short');
+            
+            const totalViews = userVids.reduce((sum, v) => sum + (v.views || 0), 0) + userShorts.reduce((sum, v) => sum + (v.views || 0), 0);
             document.getElementById('ch-views').innerText = totalViews;
+            
             renderVideos(userVids, 'channelGrid');
+            if(userVids.length === 0) { document.getElementById('ch-vids-title').style.display = 'none'; } else { document.getElementById('ch-vids-title').style.display = 'inline-block'; }
+            renderChannelShorts(userShorts, 'channelShortsGrid');
 
             const { count } = await supabaseClient.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', username);
             document.getElementById('ch-subs').innerText = count || 0;
-
             await updateSubButtonUI(username, 'channelSubBtn');
             window.scrollTo(0,0);
         }
 
         async function updateSubButtonUI(targetUser, buttonId) {
             const btn = document.getElementById(buttonId);
-            if(!currentUser || currentUser.username === targetUser) {
-                btn.style.display = 'none'; 
-                return;
-            }
+            if(!btn) return;
+            if(currentUser && currentUser.username === targetUser) { btn.style.display = 'none'; return; }
             btn.style.display = 'block';
+            if(!currentUser) { btn.innerText = "Abone Ol"; btn.classList.remove('active'); return; }
             const { data } = await supabaseClient.from('subscriptions').select('*').eq('subscriber_username', currentUser.username).eq('channel_username', targetUser);
-            if(data && data.length > 0) {
-                btn.innerText = "Abone Olundu"; 
-                btn.classList.add('active');
-            } else {
-                btn.innerText = "Abone Ol"; 
-                btn.classList.remove('active');
-            }
+            if(data && data.length > 0) { btn.innerText = "Abone Olundu"; btn.classList.add('active'); } else { btn.innerText = "Abone Ol"; btn.classList.remove('active'); }
         }
 
         async function handleSubscription(targetUser, buttonId) {
-            if(!currentUser) return alert("Abone olmak için giriş yapın!");
+            if(!currentUser) return alert("Abone olmak için önce giriş yapmalısın!");
             const btn = document.getElementById(buttonId);
-            
-            if(btn.classList.contains('active')) {
-                await supabaseClient.from('subscriptions').delete().eq('subscriber_username', currentUser.username).eq('channel_username', targetUser);
-            } else {
-                await supabaseClient.from('subscriptions').insert([{ subscriber_username: currentUser.username, channel_username: targetUser }]);
-            }
+            if(btn.classList.contains('active')) { await supabaseClient.from('subscriptions').delete().eq('subscriber_username', currentUser.username).eq('channel_username', targetUser); } 
+            else { await supabaseClient.from('subscriptions').insert([{ subscriber_username: currentUser.username, channel_username: targetUser }]); }
             await updateSubButtonUI(targetUser, buttonId);
-            
-            // Eğer kanal sayfasındaysak abone sayısını anlık güncelle
             if(document.getElementById('channel-page').style.display === 'block') {
                 const { count } = await supabaseClient.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', targetUser);
                 document.getElementById('ch-subs').innerText = count || 0;
@@ -390,28 +455,40 @@
         }
 
         // SHORTS ALANI
-        function showShorts() {
+        async function incrementShortsView(shortId) {
+            if(viewedShorts.has(shortId)) return;
+            viewedShorts.add(shortId);
+            const v = allVideos.find(vid => vid.id === shortId);
+            if(v) {
+                v.views = (v.views || 0) + 1;
+                await supabaseClient.from('videos').update({ views: v.views }).eq('id', shortId);
+            }
+        }
+
+        function showShorts(targetId = null) {
             hideAll(); document.getElementById('shorts-page').style.display = 'block';
-            const shorts = allVideos.filter(v => v.type === 'short');
+            let shorts = allVideos.filter(v => v.type === 'short');
+            
+            if(targetId) {
+                const index = shorts.findIndex(s => s.id === targetId);
+                if(index > -1) {
+                    const targetShort = shorts.splice(index, 1)[0];
+                    shorts.unshift(targetShort);
+                }
+            }
+
             if(shorts.length === 0) { document.getElementById('shortsFeed').innerHTML = `<h3 style="color:#aaa; margin-top:50px;">Henüz Shorts yok.</h3>`; return; }
+            
             document.getElementById('shortsFeed').innerHTML = shorts.map(s => `
                 <div class="short-wrapper">
-                    <video src="${s.video_url}" loop onclick="this.paused ? this.play() : this.pause()"></video>
+                    <video src="${s.video_url}" autoplay loop muted controls playsinline onplay="incrementShortsView('${s.id}')"></video>
                     <div class="short-info"><h3 style="color:white; cursor:pointer;" onclick="openChannel('${s.uploader}')">@${s.uploader}</h3><p style="color:white;">${s.title}</p></div>
                 </div>
             `).join('');
         }
 
-        // MENÜ VE ARAMA
-        function searchVideos() { 
-            const q = document.getElementById('searchInput').value.trim().toLowerCase(); 
-            if(!q) return;
-            hideAll(); 
-            document.getElementById('home-page').style.display = 'block'; 
-            const results = allVideos.filter(v => v.type !== 'short' && (v.title.toLowerCase().includes(q) || v.uploader.toLowerCase().includes(q)));
-            renderVideos(results, 'videoGrid', `"${q}" İçin Arama Sonuçları`); 
-        }
-
+        // MENÜ 
+        function searchVideos() { const q = document.getElementById('searchInput').value.trim().toLowerCase(); if(!q) return; hideAll(); document.getElementById('home-page').style.display = 'block'; const results = allVideos.filter(v => v.type !== 'short' && (v.title.toLowerCase().includes(q) || v.uploader.toLowerCase().includes(q))); renderVideos(results, 'videoGrid', `"${q}" İçin Arama Sonuçları`); }
         function showMyChannel() { if(currentUser) openChannel(currentUser.username); else alert("Önce giriş yapmalısın!"); }
         function hideAll() { ['home-page', 'player-page', 'channel-page', 'shorts-page'].forEach(id => document.getElementById(id).style.display = 'none'); }
         function goHome() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos(allVideos.filter(v=>v.type !== 'short'), 'videoGrid', ''); document.getElementById('searchInput').value = ''; }
