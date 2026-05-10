@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidStream | Video Platformu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fab fa-youtube"></i>
+            <span>VidStream</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Ara...">
+            <button><i class="fas fa-search"></i></button>
+        </div>
+        <div class="user-icons">
+            <i class="fas fa-video"></i>
+            <i class="fas fa-bell"></i>
+            <div class="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="nav-link active"><i class="fas fa-home"></i> Ana Sayfa</div>
+            <div class="nav-link"><i class="fas fa-compass"></i> Keşfet</div>
+            <div class="nav-link"><i class="fas fa-clapperboard"></i> Shorts</div>
+            <div class="nav-link"><i class="fas fa-subscriptions"></i> Abonelikler</div>
+            <hr>
+            <div class="nav-link"><i class="fas fa-history"></i> Geçmiş</div>
+            <div class="nav-link"><i class="fas fa-clock"></i> Daha sonra izle</div>
+        </aside>
+
+        <main class="content">
+            <div class="categories">
+                <span class="chip active">Tümü</span>
+                <span class="chip">Müzik</span>
+                <span class="chip">Oyun</span>
+                <span class="chip">Yazılım</span>
+                <span class="chip">Teknoloji</span>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
