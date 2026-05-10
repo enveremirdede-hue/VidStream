@@ -3,36 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidStream | Ultimate Edition</title>
+    <title>VidStream | Ultimate Full Sürüm (Düzeltilmiş)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root { --bg: #0f0f0f; --text: #f1f1f1; --accent: #15b886; --hover: #272727; --sidebar-w: 240px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
         body { background: var(--bg); color: var(--text); overflow-x: hidden; }
-
+        
         /* Navbar */
         nav { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: 60px; position: fixed; width: 100%; top: 0; background: var(--bg); z-index: 1000; border-bottom: 1px solid #222; }
         .logo { color: var(--accent); font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        
         .search-box { flex: 0 1 500px; display: flex; }
         .search-box input { width: 100%; background: #121212; border: 1px solid #333; padding: 10px 16px; border-radius: 40px 0 0 40px; color: white; outline: none; }
         .search-box button { background: #222; border: 1px solid #333; border-left: none; padding: 0 20px; border-radius: 0 40px 40px 0; color: white; cursor: pointer; }
-
         .auth-area { display: flex; align-items: center; gap: 15px; }
         .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .btn-sub { background: white; color: black; border-radius: 20px; padding: 10px 20px; font-weight: bold; border: none; cursor: pointer; }
-        .btn-sub.active { background: #333; color: white; }
         .user-profile { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: black; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; cursor: pointer; }
 
         /* Sidebar & Layout */
         .layout { display: flex; margin-top: 60px; }
-        .sidebar { width: var(--sidebar-w); height: calc(100vh - 60px); padding: 15px; position: fixed; }
+        .sidebar { width: var(--sidebar-w); height: calc(100vh - 60px); padding: 15px; position: fixed; overflow-y: auto; background: var(--bg); }
         .nav-link { padding: 12px 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; margin-bottom: 5px; }
         .nav-link:hover, .nav-link.active { background: var(--hover); }
-        
         .content { margin-left: var(--sidebar-w); padding: 24px; width: calc(100% - var(--sidebar-w)); }
         
         /* Video Grid */
@@ -42,25 +36,40 @@
         .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; object-fit: cover; background: #222; }
         .v-info { display: flex; gap: 12px; margin-top: 12px; }
         .v-avatar { width: 36px; height: 36px; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
-        .v-details h3 { font-size: 16px; margin-bottom: 4px; color: #fff; }
-        .v-details p { font-size: 14px; color: #aaa; }
-        .v-details .uploader-name:hover { color: white; }
-
+        
         /* Pages */
-        #player-page, #channel-page { display: none; }
-        .video-container { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 12px; }
-        video { width: 100%; aspect-ratio: 16/9; outline: none; border-radius: 12px; }
+        #player-page, #channel-page, #shorts-page { display: none; }
+        .video-container { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 12px; overflow: hidden; }
+        video { width: 100%; max-height: 70vh; outline: none; display: block; }
+        
+        /* Action Buttons & Comments */
+        .action-buttons { display: flex; gap: 10px; }
+        .action-btn { background: #222; border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .action-btn:hover { background: #333; }
+        .btn-sub { background: white; color: black; border-radius: 20px; padding: 10px 20px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-sub.active { background: #333; color: white; }
+
+        .comments-section { max-width: 1000px; margin: 20px auto; background: #121212; padding: 20px; border-radius: 12px; }
+        .comment-input-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .comment-input-box input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: white; padding: 10px; outline: none; }
+        .comment-item { display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
 
         /* Channel Header */
         .channel-header { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
         .ch-avatar { width: 100px; height: 100px; border-radius: 50%; font-size: 40px; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; }
-        .ch-info h1 { font-size: 28px; margin-bottom: 5px; }
-        .ch-info p { color: #aaa; margin-bottom: 15px; }
 
-        /* Modals */
+        /* Shorts */
+        .shorts-feed { display: flex; flex-direction: column; align-items: center; gap: 30px; height: calc(100vh - 100px); overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .short-wrapper { width: 400px; height: 80vh; scroll-snap-align: start; position: relative; background: #000; border-radius: 15px; overflow: hidden; display: flex; align-items: center; }
+        .short-wrapper video { width: 100%; height: 100%; object-fit: cover; aspect-ratio: 9/16; border-radius: 15px; }
+        .short-info { position: absolute; bottom: 20px; left: 20px; right: 80px; text-shadow: 1px 1px 3px black; }
+
+        /* Modals & Upload Progress */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
         .modal-box { background: #282828; padding: 30px; border-radius: 15px; width: 400px; }
-        input[type="text"], input[type="password"], input[type="file"] { width: 100%; padding: 12px; margin: 10px 0; background: #121212; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #121212; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
+        .progress-container { width: 100%; background: #444; border-radius: 10px; height: 10px; margin-top: 10px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background: var(--accent); border-radius: 10px; transition: 0.3s; }
     </style>
 </head>
 <body>
@@ -68,7 +77,7 @@
     <nav>
         <div class="logo" onclick="goHome()"><i class="fas fa-play-circle"></i><span>VidStream</span></div>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Ara..." onkeyup="searchVideos()">
+            <input type="text" id="searchInput" placeholder="Ara...">
             <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         </div>
         <div class="auth-area" id="auth-section"></div>
@@ -76,10 +85,12 @@
 
     <div class="layout">
         <aside class="sidebar">
-            <div class="nav-link active" id="nav-home" onclick="goHome()"><i class="fas fa-home"></i> Ana Sayfa</div>
+            <div class="nav-link active" onclick="goHome()"><i class="fas fa-home"></i> Ana Sayfa</div>
+            <div class="nav-link" onclick="showShorts()"><i class="fas fa-bolt"></i> Shorts</div>
             <div class="nav-link" onclick="showExplore()"><i class="fas fa-compass"></i> Keşfet</div>
-            <hr style="border: 0.5px solid #333; margin: 15px 0;">
+            <div class="nav-link" onclick="showSubscriptions()"><i class="fas fa-layer-group"></i> Abonelikler</div> <hr style="border: 0.5px solid #333; margin: 15px 0;">
             <div class="nav-link" onclick="showHistory()"><i class="fas fa-history"></i> Geçmiş</div>
+            <div class="nav-link" onclick="showMyChannel()"><i class="fas fa-user"></i> Kanalım</div>
         </aside>
 
         <main class="content">
@@ -88,18 +99,33 @@
                 <div class="video-grid" id="videoGrid"></div>
             </div>
 
+            <div id="shorts-page"><div class="shorts-feed" id="shortsFeed"></div></div>
+
             <div id="player-page">
                 <div class="video-container"><video id="mainVideo" controls autoplay></video></div>
-                <div style="margin-top: 15px; max-width: 1000px; margin: 0 auto;">
+                <div style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
                     <h2 id="p-title"></h2>
-                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                        <div style="display:flex; align-items: center; gap: 15px; cursor: pointer;" onclick="openChannel(document.getElementById('p-uploader').innerText)">
-                            <div class="user-profile" id="p-avatar" style="width:40px; height:40px;"></div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+                        <div style="display:flex; align-items: center; gap: 15px;">
+                            <div class="user-profile" id="p-avatar" onclick="openChannel(document.getElementById('p-uploader-name').innerText)" style="cursor:pointer;"></div>
                             <div>
-                                <h3 id="p-uploader" style="color: white; font-size: 16px;"></h3>
+                                <h3 id="p-uploader-name" style="color: white; font-size: 16px; cursor:pointer;" onclick="openChannel(this.innerText)"></h3>
                                 <p id="p-views" style="color: #aaa; font-size: 14px;"></p>
                             </div>
+                            <button class="btn-sub" id="playerSubBtn" style="margin-left: 20px; display:none;" onclick="toggleSubFromPlayer()">Abone Ol</button>
                         </div>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="likeVideo()"><i class="fas fa-thumbs-up"></i> <span id="p-likes">0</span></button>
+                        </div>
+                    </div>
+                    
+                    <div class="comments-section">
+                        <h3>Yorumlar</h3>
+                        <div class="comment-input-box">
+                            <input type="text" id="commentInput" placeholder="Yorum ekle...">
+                            <button class="btn" onclick="postComment()">Gönder</button>
+                        </div>
+                        <div id="commentsList"></div>
                     </div>
                 </div>
             </div>
@@ -108,9 +134,9 @@
                 <div class="channel-header">
                     <div class="ch-avatar" id="ch-avatar"></div>
                     <div class="ch-info">
-                        <h1 id="ch-name">Kanal Adı</h1>
-                        <p><span id="ch-subs">0</span> Abone • <span id="ch-views">0</span> Toplam Görüntülenme</p>
-                        <button class="btn-sub" id="subBtn" onclick="toggleSubscribe()">Abone Ol</button>
+                        <h1 id="ch-name">Kanal</h1>
+                        <p><span id="ch-subs">0</span> Abone • <span id="ch-views">0</span> İzlenme</p>
+                        <button class="btn-sub" id="channelSubBtn" onclick="toggleSubFromChannel()">Abone Ol</button>
                     </div>
                 </div>
                 <h3 style="margin-bottom: 20px; border-bottom: 2px solid white; display: inline-block; padding-bottom: 5px;">Videolar</h3>
@@ -119,227 +145,283 @@
         </main>
     </div>
 
-    <div id="loginModal" class="modal">
-        <div class="modal-box">
-            <h2>Giriş Yap</h2>
-            <input type="text" id="l-user" placeholder="Kullanıcı Adı">
-            <input type="password" id="l-pass" placeholder="Şifre">
-            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Giriş</button>
-            <p style="text-align:center; margin-top:15px; font-size:14px;">Hesabın yok mu? <a href="#" style="color:var(--accent);" onclick="openModal('registerModal')">Kayıt Ol</a></p>
-            <button onclick="closeModals()" class="btn-outline" style="border:none; width: 100%; margin-top: 10px;">İptal</button>
-        </div>
-    </div>
-
-    <div id="registerModal" class="modal">
-        <div class="modal-box">
-            <h2>Kayıt Ol</h2>
-            <input type="text" id="r-user" placeholder="Kullanıcı Adı Belirle">
-            <input type="password" id="r-pass" placeholder="Şifre Belirle">
-            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="handleRegister()">Hesap Oluştur</button>
-            <p style="text-align:center; margin-top:15px; font-size:14px;">Zaten hesabın var mı? <a href="#" style="color:var(--accent);" onclick="openModal('loginModal')">Giriş Yap</a></p>
-            <button onclick="closeModals()" class="btn-outline" style="border:none; width: 100%; margin-top: 10px;">İptal</button>
-        </div>
-    </div>
-
     <div id="uploadModal" class="modal">
         <div class="modal-box">
             <h2>Video Yükle</h2>
             <input type="text" id="upTitle" placeholder="Video Başlığı">
+            <select id="upType"><option value="video">Normal Video</option><option value="short">Shorts</option></select>
             <input type="file" id="upFile" accept="video/*">
-            <button class="btn" id="upBtn" style="width: 100%; margin-top: 10px;" onclick="processUpload()">Yükle</button>
-            <p id="status-msg" style="color: var(--accent); margin-top: 10px; text-align: center;"></p>
-            <button onclick="closeModals()" class="btn-outline" style="border:none; width: 100%; margin-top: 10px;">İptal</button>
+            <button class="btn" id="upBtn" style="width: 100%;" onclick="processUpload()">Yüklemeyi Başlat</button>
+            <div class="progress-container" id="pContainer"><div class="progress-bar" id="pBar"></div></div>
+            <p id="status-msg" style="margin-top: 10px; font-size: 14px; text-align: center; color:var(--accent);"></p>
+            <button onclick="closeModals()" class="btn-outline" style="width: 100%; margin-top: 10px; border:none;">İptal</button>
         </div>
     </div>
+    <div id="loginModal" class="modal"><div class="modal-box"><h2>Giriş Yap</h2><input type="text" id="l-user" placeholder="Kullanıcı Adı"><input type="password" id="l-pass" placeholder="Şifre"><button class="btn" style="width: 100%;" onclick="handleLogin()">Giriş</button><button onclick="closeModals()" class="btn-outline" style="width: 100%; border:none; margin-top:10px;">İptal</button></div></div>
+    <div id="registerModal" class="modal"><div class="modal-box"><h2>Kayıt Ol</h2><input type="text" id="r-user" placeholder="Kullanıcı Adı"><input type="password" id="r-pass" placeholder="Şifre"><button class="btn" style="width: 100%;" onclick="handleRegister()">Kayıt Ol</button><button onclick="closeModals()" class="btn-outline" style="width: 100%; border:none; margin-top:10px;">İptal</button></div></div>
 
     <script>
         const supabaseUrl = 'https://utqmrevzozaarbirqwzu.supabase.co';
         const supabaseKey = 'sb_publishable_KFKGOAFT9oQD8nOwSqxuWQ_3kk9CznC';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let currentUser = JSON.parse(localStorage.getItem('vs_user')) || null;
         let watchHistory = JSON.parse(localStorage.getItem('vs_history')) || [];
-        let allVideos = []; 
+        let allVideos = [];
+        let currentPlayingId = null;
+        let currentVideoUploader = "";
         let currentChannelView = "";
 
-        // --- AUTH (Kayıt / Giriş) ---
+        // Enter tuşuyla arama yapma eklentisi
+        document.getElementById("searchInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                searchVideos();
+            }
+        });
+
+        // AUTH
         function updateAuthUI() {
             const authArea = document.getElementById('auth-section');
             if (currentUser) {
-                authArea.innerHTML = `
-                    <button class="btn-outline" onclick="openModal('uploadModal')"><i class="fas fa-video"></i> Yükle</button>
-                    <div class="user-profile" title="Kanalım" onclick="openChannel('${currentUser.username}')">${currentUser.username.charAt(0).toUpperCase()}</div>
-                    <button onclick="handleLogout()" style="background:none; border:none; color:#ff4d4d; font-size: 20px; cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>
-                `;
+                authArea.innerHTML = `<button class="btn-outline" onclick="openModal('uploadModal')"><i class="fas fa-plus"></i> Yükle</button><div class="user-profile" onclick="openChannel('${currentUser.username}')" title="Kanalıma Git">${currentUser.username[0].toUpperCase()}</div><button onclick="handleLogout()" style="background:none; border:none; color:#ff4d4d; font-size: 20px; cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>`;
             } else {
-                authArea.innerHTML = `
-                    <button class="btn-outline" onclick="openModal('loginModal')">Giriş Yap</button>
-                    <button class="btn" onclick="openModal('registerModal')">Kayıt Ol</button>
-                `;
+                authArea.innerHTML = `<button class="btn-outline" onclick="openModal('loginModal')">Giriş</button><button class="btn" onclick="openModal('registerModal')">Kayıt</button>`;
             }
         }
 
         async function handleRegister() {
             const u = document.getElementById('r-user').value.trim();
             const p = document.getElementById('r-pass').value.trim();
-            if(!u || !p) return alert("Kullanıcı adı ve şifre girin!");
-            
-            const { data, error } = await supabase.from('users').insert([{ username: u, password: p }]);
-            if (error) return alert("Bu kullanıcı adı alınmış olabilir!");
-            
-            alert("Hesap oluşturuldu! Şimdi giriş yapabilirsiniz.");
-            openModal('loginModal');
+            if(!u || !p) return alert("Bilgileri doldurun!");
+            const { error } = await supabaseClient.from('users').insert([{ username: u, password: p }]);
+            if (error) return alert("Hata: " + error.message);
+            alert("Kayıt başarılı! Giriş yapabilirsiniz."); openModal('loginModal');
         }
 
         async function handleLogin() {
             const u = document.getElementById('l-user').value.trim();
             const p = document.getElementById('l-pass').value.trim();
-            
-            const { data, error } = await supabase.from('users').select('*').eq('username', u).eq('password', p);
-            if (data.length === 0 || error) return alert("Hatalı kullanıcı adı veya şifre!");
-
-            currentUser = { username: u };
-            localStorage.setItem('vs_user', JSON.stringify(currentUser));
-            updateAuthUI();
-            closeModals();
+            const { data } = await supabaseClient.from('users').select('*').eq('username', u).eq('password', p);
+            if (data && data.length > 0) { currentUser = { username: u }; localStorage.setItem('vs_user', JSON.stringify(currentUser)); location.reload(); }
+            else alert("Hatalı kullanıcı adı veya şifre!");
         }
 
-        function handleLogout() { currentUser = null; localStorage.removeItem('vs_user'); updateAuthUI(); goHome(); }
+        function handleLogout() { currentUser = null; localStorage.removeItem('vs_user'); location.reload(); }
 
-        // --- VİDEOLAR ---
+        // VİDEOLAR
         async function fetchVideos() {
-            const { data } = await supabase.from('videos').select('*').order('created_at', { ascending: false });
+            const { data } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
             allVideos = data || [];
-            if(document.getElementById('home-page').style.display !== 'none') renderVideos(allVideos, 'videoGrid');
+            if(document.getElementById('home-page').style.display !== 'none') goHome();
         }
 
         function renderVideos(videoArray, containerId, title = "") {
-            const grid = document.getElementById(containerId);
             const titleEl = document.getElementById('page-title');
             if(titleEl) { titleEl.style.display = title ? 'block' : 'none'; titleEl.innerText = title; }
+            
+            if (videoArray.length === 0) {
+                document.getElementById(containerId).innerHTML = `<p style="color:#aaa; font-size:18px;">Burası çok ıssız... Video bulunamadı.</p>`;
+                return;
+            }
 
-            grid.innerHTML = videoArray.map(v => `
+            document.getElementById(containerId).innerHTML = videoArray.map(v => `
                 <div class="v-card">
                     <img class="v-thumb" src="https://picsum.photos/seed/${v.id}/400/225" onclick="openVideo('${v.id}')">
                     <div class="v-info">
-                        <div class="v-avatar" style="background:${stringToColor(v.uploader)}" onclick="openChannel('${v.uploader}')">${v.uploader.charAt(0).toUpperCase()}</div>
-                        <div class="v-details">
-                            <h3 onclick="openVideo('${v.id}')">${v.title}</h3>
-                            <p class="uploader-name" style="cursor:pointer;" onclick="openChannel('${v.uploader}')">${v.uploader}</p>
-                            <p>${v.views || 0} görüntüleme</p>
-                        </div>
+                        <div class="v-avatar" style="background:${stringToColor(v.uploader)}" onclick="openChannel('${v.uploader}')">${v.uploader[0].toUpperCase()}</div>
+                        <div><h3 onclick="openVideo('${v.id}')">${v.title}</h3><p style="cursor:pointer;" onclick="openChannel('${v.uploader}')">${v.uploader}</p><p>${v.views || 0} izlenme</p></div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- KANAL VE ABONELİK SİSTEMİ ---
-        async function openChannel(username) {
-            hideAll();
-            document.getElementById('channel-page').style.display = 'block';
-            currentChannelView = username;
-            
-            // Bilgileri Doldur
-            document.getElementById('ch-name').innerText = username;
-            document.getElementById('ch-avatar').style.background = stringToColor(username);
-            document.getElementById('ch-avatar').innerText = username.charAt(0).toUpperCase();
-
-            // Kişinin Videoları ve Toplam İzlenmesi
-            const userVids = allVideos.filter(v => v.uploader === username);
-            const totalViews = userVids.reduce((sum, v) => sum + (v.views || 0), 0);
-            document.getElementById('ch-views').innerText = totalViews;
-            renderVideos(userVids, 'channelGrid');
-
-            // Abone Sayısını Çek
-            const { count } = await supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', username);
-            document.getElementById('ch-subs').innerText = count || 0;
-
-            // Abone Ol Butonu Durumu
-            const subBtn = document.getElementById('subBtn');
-            if(!currentUser || currentUser.username === username) {
-                subBtn.style.display = 'none'; // Kendi kanalıysa veya giriş yapmadıysa gizle
-            } else {
-                subBtn.style.display = 'block';
-                const { data } = await supabase.from('subscriptions').select('*').eq('subscriber_username', currentUser.username).eq('channel_username', username);
-                if(data && data.length > 0) {
-                    subBtn.innerText = "Abone Olundu"; subBtn.classList.add('active');
-                } else {
-                    subBtn.innerText = "Abone Ol"; subBtn.classList.remove('active');
-                }
-            }
-            window.scrollTo(0,0);
-        }
-
-        async function toggleSubscribe() {
-            if(!currentUser) return alert("Abone olmak için giriş yapın!");
-            const subBtn = document.getElementById('subBtn');
-            
-            if(subBtn.classList.contains('active')) {
-                // Abonelikten Çık
-                await supabase.from('subscriptions').delete().eq('subscriber_username', currentUser.username).eq('channel_username', currentChannelView);
-            } else {
-                // Abone Ol
-                await supabase.from('subscriptions').insert([{ subscriber_username: currentUser.username, channel_username: currentChannelView }]);
-            }
-            openChannel(currentChannelView); // Sayfayı yenile
-        }
-
-        // --- DİĞER İŞLEMLER (Yükleme, Oynatma, Menü) ---
+        // YÜKLEME
         async function processUpload() {
+            if(!currentUser) return alert("Önce giriş yapmalısın!");
             const file = document.getElementById('upFile').files[0];
             const title = document.getElementById('upTitle').value;
+            const type = document.getElementById('upType').value;
             const btn = document.getElementById('upBtn');
             const msg = document.getElementById('status-msg');
+            const pBar = document.getElementById('pBar');
+            const pContainer = document.getElementById('pContainer');
 
-            if(!file || !title) return alert("Video ve başlık seçin.");
-            btn.disabled = true; msg.innerText = "Yükleniyor...";
+            if(!file || !title) return alert("Dosya ve başlık seçin!");
+            btn.disabled = true; pContainer.style.display = "block"; msg.innerText = "Yükleniyor, lütfen sekmeyi kapatmayın...";
 
             try {
-                const fileName = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-                await supabase.storage.from('videos').upload(fileName, file);
-                const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
-                await supabase.from('videos').insert([{ title, video_url: publicUrl, uploader: currentUser.username, views: 0 }]);
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+                const { error } = await supabaseClient.storage.from('videos').upload(fileName, file, { cacheControl: '3600', upsert: false });
+                if (error) throw error;
                 
-                alert("Yüklendi!");
-                closeModals(); fetchVideos(); openChannel(currentUser.username);
-            } catch (e) { alert("Hata oluştu!"); } 
-            finally { btn.disabled = false; msg.innerText = ""; }
+                pBar.style.width = "100%"; msg.innerText = "Sisteme kaydediliyor...";
+                const { data: urlData } = supabaseClient.storage.from('videos').getPublicUrl(fileName);
+                await supabaseClient.from('videos').insert([{ title, video_url: urlData.publicUrl, uploader: currentUser.username, views: 0, likes: 0, type }]);
+                
+                alert("Başarıyla Yüklendi!"); location.reload();
+            } catch (e) { alert("Yükleme Hatası: " + e.message); } 
+            finally { btn.disabled = false; msg.innerText = ""; pContainer.style.display = "none"; pBar.style.width = "0%"; }
         }
 
+        // VİDEO İZLEME
         async function openVideo(id) {
+            currentPlayingId = id;
             const v = allVideos.find(v => v.id === id);
+            currentVideoUploader = v.uploader;
+            
+            // Geçmişe ekle
+            watchHistory = watchHistory.filter(h => h.id !== id);
+            watchHistory.unshift(v);
+            if(watchHistory.length > 20) watchHistory.pop();
+            localStorage.setItem('vs_history', JSON.stringify(watchHistory));
+
             hideAll(); document.getElementById('player-page').style.display = 'block';
             
             document.getElementById('mainVideo').src = v.video_url;
             document.getElementById('p-title').innerText = v.title;
-            document.getElementById('p-uploader').innerText = v.uploader;
-            document.getElementById('p-views').innerText = `${(v.views || 0) + 1} görüntüleme`;
+            document.getElementById('p-uploader-name').innerText = v.uploader;
+            document.getElementById('p-views').innerText = `${(v.views || 0) + 1} izlenme`;
+            document.getElementById('p-likes').innerText = v.likes || 0;
             document.getElementById('p-avatar').style.background = stringToColor(v.uploader);
-            document.getElementById('p-avatar').innerText = v.uploader.charAt(0).toUpperCase();
+            document.getElementById('p-avatar').innerText = v.uploader[0].toUpperCase();
 
-            await supabase.from('videos').update({ views: v.views + 1 }).eq('id', id);
+            // Oynatıcıdaki Abone Butonunu Güncelle
+            await updateSubButtonUI(currentVideoUploader, 'playerSubBtn');
+
+            await supabaseClient.from('videos').update({ views: (v.views || 0) + 1 }).eq('id', id);
+            fetchComments(id); window.scrollTo(0,0);
+        }
+
+        // KANAL VE ABONELİK (ORTAK FONKSİYONLAR)
+        async function openChannel(username) {
+            hideAll(); document.getElementById('channel-page').style.display = 'block';
+            currentChannelView = username;
+            
+            document.getElementById('ch-name').innerText = username;
+            document.getElementById('ch-avatar').style.background = stringToColor(username);
+            document.getElementById('ch-avatar').innerText = username[0].toUpperCase();
+
+            const userVids = allVideos.filter(v => v.uploader === username && v.type !== 'short');
+            const totalViews = userVids.reduce((sum, v) => sum + (v.views || 0), 0);
+            document.getElementById('ch-views').innerText = totalViews;
+            renderVideos(userVids, 'channelGrid');
+
+            const { count } = await supabaseClient.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', username);
+            document.getElementById('ch-subs').innerText = count || 0;
+
+            await updateSubButtonUI(username, 'channelSubBtn');
             window.scrollTo(0,0);
         }
 
-        function hideAll() {
-            ['home-page', 'player-page', 'channel-page'].forEach(id => document.getElementById(id).style.display = 'none');
+        async function updateSubButtonUI(targetUser, buttonId) {
+            const btn = document.getElementById(buttonId);
+            if(!currentUser || currentUser.username === targetUser) {
+                btn.style.display = 'none'; 
+                return;
+            }
+            btn.style.display = 'block';
+            const { data } = await supabaseClient.from('subscriptions').select('*').eq('subscriber_username', currentUser.username).eq('channel_username', targetUser);
+            if(data && data.length > 0) {
+                btn.innerText = "Abone Olundu"; 
+                btn.classList.add('active');
+            } else {
+                btn.innerText = "Abone Ol"; 
+                btn.classList.remove('active');
+            }
         }
 
-        function goHome() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos(allVideos, 'videoGrid'); }
-        function showExplore() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos([...allVideos].sort(() => 0.5 - Math.random()), 'videoGrid', '🔥 Keşfet'); }
-        function showHistory() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos(watchHistory, 'videoGrid', '⏱️ Geçmiş'); }
-        function searchVideos() { 
-            const q = document.getElementById('searchInput').value.toLowerCase();
+        async function handleSubscription(targetUser, buttonId) {
+            if(!currentUser) return alert("Abone olmak için giriş yapın!");
+            const btn = document.getElementById(buttonId);
+            
+            if(btn.classList.contains('active')) {
+                await supabaseClient.from('subscriptions').delete().eq('subscriber_username', currentUser.username).eq('channel_username', targetUser);
+            } else {
+                await supabaseClient.from('subscriptions').insert([{ subscriber_username: currentUser.username, channel_username: targetUser }]);
+            }
+            await updateSubButtonUI(targetUser, buttonId);
+            
+            // Eğer kanal sayfasındaysak abone sayısını anlık güncelle
+            if(document.getElementById('channel-page').style.display === 'block') {
+                const { count } = await supabaseClient.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', targetUser);
+                document.getElementById('ch-subs').innerText = count || 0;
+            }
+        }
+
+        function toggleSubFromPlayer() { handleSubscription(currentVideoUploader, 'playerSubBtn'); }
+        function toggleSubFromChannel() { handleSubscription(currentChannelView, 'channelSubBtn'); }
+
+        async function showSubscriptions() {
+            if(!currentUser) return alert("Aboneliklerini görmek için giriş yapmalısın!");
             hideAll(); document.getElementById('home-page').style.display = 'block';
-            renderVideos(allVideos.filter(v => v.title.toLowerCase().includes(q) || v.uploader.toLowerCase().includes(q)), 'videoGrid', `Sonuçlar`);
+            const { data } = await supabaseClient.from('subscriptions').select('channel_username').eq('subscriber_username', currentUser.username);
+            const subChannels = data.map(d => d.channel_username);
+            const subVids = allVideos.filter(v => subChannels.includes(v.uploader) && v.type !== 'short');
+            renderVideos(subVids, 'videoGrid', '🔔 Aboneliklerim');
         }
 
+        // BEĞENİ VE YORUM
+        async function likeVideo() {
+            if(!currentUser) return alert("Beğenmek için giriş yapın!");
+            const v = allVideos.find(v => v.id === currentPlayingId);
+            v.likes = (v.likes || 0) + 1;
+            document.getElementById('p-likes').innerText = v.likes;
+            await supabaseClient.from('videos').update({ likes: v.likes }).eq('id', currentPlayingId);
+        }
+
+        async function postComment() {
+            if(!currentUser) return alert("Yorum yapmak için giriş yapın!");
+            const content = document.getElementById('commentInput').value.trim();
+            if(!content) return;
+            await supabaseClient.from('comments').insert([{ video_id: currentPlayingId, username: currentUser.username, content }]);
+            document.getElementById('commentInput').value = '';
+            fetchComments(currentPlayingId);
+        }
+
+        async function fetchComments(videoId) {
+            const { data } = await supabaseClient.from('comments').select('*').eq('video_id', videoId).order('created_at', { ascending: false });
+            document.getElementById('commentsList').innerHTML = (data || []).map(c => `
+                <div class="comment-item">
+                    <div class="user-profile" style="width:30px; height:30px; font-size:14px; background:${stringToColor(c.username)}">${c.username[0].toUpperCase()}</div>
+                    <div><strong style="color:white; font-size:14px; cursor:pointer;" onclick="openChannel('${c.username}')">${c.username}</strong><p style="color:#ddd; margin-top:5px; font-size:14px;">${c.content}</p></div>
+                </div>
+            `).join('');
+        }
+
+        // SHORTS ALANI
+        function showShorts() {
+            hideAll(); document.getElementById('shorts-page').style.display = 'block';
+            const shorts = allVideos.filter(v => v.type === 'short');
+            if(shorts.length === 0) { document.getElementById('shortsFeed').innerHTML = `<h3 style="color:#aaa; margin-top:50px;">Henüz Shorts yok.</h3>`; return; }
+            document.getElementById('shortsFeed').innerHTML = shorts.map(s => `
+                <div class="short-wrapper">
+                    <video src="${s.video_url}" loop onclick="this.paused ? this.play() : this.pause()"></video>
+                    <div class="short-info"><h3 style="color:white; cursor:pointer;" onclick="openChannel('${s.uploader}')">@${s.uploader}</h3><p style="color:white;">${s.title}</p></div>
+                </div>
+            `).join('');
+        }
+
+        // MENÜ VE ARAMA
+        function searchVideos() { 
+            const q = document.getElementById('searchInput').value.trim().toLowerCase(); 
+            if(!q) return;
+            hideAll(); 
+            document.getElementById('home-page').style.display = 'block'; 
+            const results = allVideos.filter(v => v.type !== 'short' && (v.title.toLowerCase().includes(q) || v.uploader.toLowerCase().includes(q)));
+            renderVideos(results, 'videoGrid', `"${q}" İçin Arama Sonuçları`); 
+        }
+
+        function showMyChannel() { if(currentUser) openChannel(currentUser.username); else alert("Önce giriş yapmalısın!"); }
+        function hideAll() { ['home-page', 'player-page', 'channel-page', 'shorts-page'].forEach(id => document.getElementById(id).style.display = 'none'); }
+        function goHome() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos(allVideos.filter(v=>v.type !== 'short'), 'videoGrid', ''); document.getElementById('searchInput').value = ''; }
+        function showExplore() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos([...allVideos.filter(v=>v.type !== 'short')].sort(() => 0.5 - Math.random()), 'videoGrid', '🔥 Keşfet'); }
+        function showHistory() { hideAll(); document.getElementById('home-page').style.display = 'block'; renderVideos(watchHistory, 'videoGrid', '⏱️ İzleme Geçmişi'); }
         function openModal(id) { closeModals(); document.getElementById(id).style.display = 'flex'; }
         function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-        function stringToColor(str) { let hash = 0; for(let i=0; i<str.length; i++) hash = str.charCodeAt(i) + ((hash<<5)-hash); return `hsl(${hash%360}, 70%, 60%)`; }
+        function stringToColor(str) { let hash=0; for(let i=0;i<str.length;i++) hash=str.charCodeAt(i)+((hash<<5)-hash); return `hsl(${hash%360}, 70%, 60%)`; }
 
-        updateAuthUI();
-        fetchVideos();
+        updateAuthUI(); fetchVideos();
     </script>
 </body>
 </html>
