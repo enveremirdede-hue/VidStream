@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VidStream | Ultimate Full Sürüm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #0f0f0f; --text: #f1f1f1; --accent: #15b886; --hover: #272727; --sidebar-w: 240px; }
@@ -210,6 +211,8 @@
     <div id="registerModal" class="modal"><div class="modal-box"><h2>Kayıt Ol</h2><input type="text" id="r-user" placeholder="Kullanıcı Adı"><input type="password" id="r-pass" placeholder="Şifre"><button class="btn" style="width: 100%;" onclick="handleRegister()">Kayıt Ol</button><button onclick="closeModals()" class="btn-outline" style="width: 100%; border:none; margin-top:10px;">İptal</button></div></div>
 
     <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
         const supabaseUrl = 'https://utqmrevzozaarbirqwzu.supabase.co';
         const supabaseKey = 'sb_publishable_KFKGOAFT9oQD8nOwSqxuWQ_3kk9CznC';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -299,74 +302,124 @@
 
         // YÜKLEME 
         async function processUpload() {
-            if(!currentUser) return alert("Önce giriş yapmalısın!");
-            const file = document.getElementById('upFile').files[0];
-            const title = document.getElementById('upTitle').value;
-            const type = document.getElementById('upType').value;
-            const btn = document.getElementById('upBtn');
-            const msg = document.getElementById('status-msg');
-            const pBar = document.getElementById('pBar');
-            const pContainer = document.getElementById('pContainer');
-            const pDetails = document.getElementById('pDetails');
+    if (!currentUser) return alert("Önce giriş yapmalısın!");
+    
+    // Dosyayı 'let' ile tanımlıyoruz çünkü sıkıştırınca değiştireceğiz
+    let file = document.getElementById('upFile').files[0];
+    const title = document.getElementById('upTitle').value;
+    const type = document.getElementById('upType').value;
+    const btn = document.getElementById('upBtn');
+    const msg = document.getElementById('status-msg');
+    const pBar = document.getElementById('pBar');
+    const pContainer = document.getElementById('pContainer');
+    const pDetails = document.getElementById('pDetails');
+
+    if (!file || !title) return alert("Dosya ve başlık seçin!");
+
+    btn.disabled = true;
+    pContainer.style.display = "block";
+
+    // --- SIKIŞTIRMA CERRAHİSİ BAŞLANGICI ---
+    if (file.size > 50 * 1024 * 1024) { // 50 MB sınırı
+        msg.innerText = "Video 50MB limitinin üstünde. Otomatik sıkıştırılıyor... (1-2 dk sürebilir)";
+        pDetails.innerText = "Sıkıştırma motoru hazırlanıyor...";
+        
+        try {
+            const { createFFmpeg, fetchFile } = FFmpeg;
+            const ffmpeg = createFFmpeg({ log: false });
+            if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+            ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+
+            // Videoyu kaliteyi koruyarak 50MB altına indirmeyi dener
+            await ffmpeg.run('-i', 'input.mp4', '-b:v', '1000k', 'output.mp4');
+
+            const data = ffmpeg.FS('readFile', 'output.mp4');
+            file = new File([data.buffer], "compressed_video.mp4", { type: "video/mp4" });
             
-            if(!file || !title) return alert("Dosya ve başlık seçin!");
-            
-            btn.disabled = true; 
-            pContainer.style.display = "block"; 
-            msg.innerText = "Sunucuya bağlanılıyor...";
-            pDetails.innerText = "0 MB / 0 MB (Hesaplanıyor...)";
-            pBar.style.width = "0%";
-
-            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-            const url = `${supabaseUrl}/storage/v1/object/videos/${fileName}`;
-            
-            const xhr = new XMLHttpRequest();
-            const startTime = Date.now();
-
-            xhr.upload.onprogress = function(event) {
-                if (event.lengthComputable) {
-                    const percent = (event.loaded / event.total) * 100;
-                    pBar.style.width = percent + "%";
-                    
-                    const loadedMB = (event.loaded / (1024 * 1024)).toFixed(2);
-                    const totalMB = (event.total / (1024 * 1024)).toFixed(2);
-                    
-                    const elapsedTime = (Date.now() - startTime) / 1000;
-                    const bps = event.loaded / elapsedTime; 
-                    const remainingBytes = event.total - event.loaded;
-                    const remainingSecs = Math.max(0, Math.floor(remainingBytes / bps));
-                    
-                    let timeStr = remainingSecs > 60 ? `${Math.floor(remainingSecs / 60)} dk ${remainingSecs % 60} sn` : `${remainingSecs} sn`;
-                    pDetails.innerText = `${loadedMB} MB / ${totalMB} MB yüklendi. (Kalan Süre: ${timeStr})`;
-                }
-            };
-
-            xhr.onload = async function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    pBar.style.width = "100%"; 
-                    pDetails.innerText = "Dosya gönderildi! İşleniyor...";
-                    msg.innerText = "Veritabanına kaydediliyor...";
-                    
-                    const { data: urlData } = supabaseClient.storage.from('videos').getPublicUrl(fileName);
-                    await supabaseClient.from('videos').insert([{ title, video_url: urlData.publicUrl, uploader: currentUser.username, views: 0, likes: 0, type }]);
-                    
-                    alert("Başarıyla Yüklendi!"); 
-                    location.reload();
-                } else {
-                    msg.innerText = "Yükleme Hatası!"; pDetails.innerText = ""; alert("Sunucu reddetti, lütfen tekrar deneyin."); resetUploadUI();
-                }
-            };
-
-            xhr.onerror = function() { alert("Bağlantı koptu! Yükleme başarısız."); resetUploadUI(); };
-
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
-            xhr.setRequestHeader('apikey', supabaseKey);
-            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-            xhr.send(file);
-            
-            function resetUploadUI() { btn.disabled = false; msg.innerText = ""; pContainer.style.display = "none"; pBar.style.width = "0%"; pDetails.innerText = ""; }
+            msg.innerText = "Sıkıştırma bitti! Yükleme başlıyor...";
+        } catch (e) {
+            console.error(e);
+            alert("Sıkıştırma başarısız oldu, yine de yüklemeye çalışılıyor...");
         }
+    }
+    // --- SIKIŞTIRMA CERRAHİSİ BİTTİ ---
+
+    msg.innerText = "Sunucuya bağlanılıyor...";
+    pDetails.innerText = "0 MB / 0 MB (Hesaplanıyor...)";
+    pBar.style.width = "0%";
+
+    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+    const url = `${supabaseUrl}/storage/v1/object/videos/${fileName}`;
+
+    const xhr = new XMLHttpRequest();
+    const startTime = Date.now();
+
+    xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+            const percent = (event.loaded / event.total) * 100;
+            pBar.style.width = percent + "%";
+
+            const loadedMB = (event.loaded / (1024 * 1024)).toFixed(2);
+            const totalMB = (event.total / (1024 * 1024)).toFixed(2);
+
+            const elapsedTime = (Date.now() - startTime) / 1000;
+            const bps = event.loaded / elapsedTime;
+            const remainingBytes = event.total - event.loaded;
+            const remainingSecs = Math.max(0, Math.floor(remainingBytes / bps));
+
+            let timeStr = remainingSecs > 60 ? `${Math.floor(remainingSecs / 60)} dk ${remainingSecs % 60} sn` : `${remainingSecs} sn`;
+            pDetails.innerText = `${loadedMB} MB / ${totalMB} MB yüklendi. (Kalan Süre: ${timeStr})`;
+        }
+    };
+
+    xhr.onload = async function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            pBar.style.width = "100%";
+            pDetails.innerText = "Dosya gönderildi! İşleniyor...";
+            msg.innerText = "Veritabanına kaydediliyor...";
+
+            const { data: urlData } = supabaseClient.storage.from('videos').getPublicUrl(fileName);
+            await supabaseClient.from('videos').insert([{
+                title,
+                video_url: urlData.publicUrl,
+                uploader: currentUser.username,
+                views: 0,
+                likes: 0,
+                type
+            }]);
+
+            alert("Başarıyla Yüklendi!");
+            location.reload();
+        } else {
+            msg.innerText = "Yükleme Hatası!";
+            pDetails.innerText = "";
+            alert("Sunucu reddetti. Limit aşılmış olabilir.");
+            resetUploadUI();
+        }
+    };
+
+    xhr.onerror = function() {
+        alert("Bağlantı koptu! Yükleme başarısız.");
+        resetUploadUI();
+    };
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
+    xhr.setRequestHeader('apikey', supabaseKey);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.send(file);
+}
+
+// Hata durumunda butonu ve mesajları sıfırlamak için yardımcı fonksiyon
+function resetUploadUI() {
+    const btn = document.getElementById('upBtn');
+    const pContainer = document.getElementById('pContainer');
+    const msg = document.getElementById('status-msg');
+    btn.disabled = false;
+    pContainer.style.display = "none";
+    msg.innerText = "";
+}
 
         // VİDEO İZLEME VE KANAL
         async function openVideo(id) {
@@ -576,6 +629,4 @@
         function stringToColor(str) { let hash=0; for(let i=0;i<str.length;i++) hash=str.charCodeAt(i)+((hash<<5)-hash); return `hsl(${hash%360}, 70%, 60%)`; }
 
         updateAuthUI(); fetchVideos();
-    </script>
-</body>
-</html>
+    </script>v
