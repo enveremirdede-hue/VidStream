@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidStream | Ultimate Full Sürüm Pro Cloud</title>
+    <title>VidStream | Realtime Cloud & Multi-Device Sync</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -103,8 +103,16 @@
         .v-info { display: flex; gap: 12px; margin-top: 12px; }
         .v-avatar { width: 36px; height: 36px; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
 
+        /* KANAL ARAMA VE LİSTELEME TASARIMI */
+        .channels-search-bar { width: 100%; max-width: 600px; margin: 0 auto 30px auto; }
+        .channels-search-bar input { width: 100%; padding: 14px 20px; background: #181818; border: 1px solid #333; border-radius: 30px; color: white; font-size: 16px; outline: none; }
+        .channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .channel-card { background: #181818; border: 1px solid #282828; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.2s; }
+        .channel-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .channel-card .ch-avatar-lg { width: 80px; height: 80px; border-radius: 50%; font-size: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 12px; color: black; }
+
         /* Pages */
-        #player-page, #channel-page, #shorts-page { display: none; }
+        #player-page, #channel-page, #shorts-page, #channels-page { display: none; }
         .video-container { width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         video { width: 100%; max-height: 70vh; outline: none; display: block; }
 
@@ -128,7 +136,8 @@
         .comments-section { max-width: 1000px; margin: 20px auto; background: #121212; padding: 20px; border-radius: 12px; border: 1px solid #222; }
         .comment-input-box { display: flex; gap: 10px; margin-bottom: 20px; }
         .comment-input-box input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: white; padding: 10px; outline: none; }
-        .comment-item { display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .comment-item { display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Channel Header */
         .channel-header { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
@@ -252,6 +261,7 @@
             <div class="nav-link active" id="nav-home" onclick="goHome()"><i class="fas fa-home"></i> Ana Sayfa</div>
             <div class="nav-link" id="nav-shorts" onclick="showShorts()"><i class="fas fa-bolt"></i> Shorts</div>
             <div class="nav-link" id="nav-explore" onclick="showExplore()"><i class="fas fa-compass"></i> Keşfet</div>
+            <div class="nav-link" id="nav-channels" onclick="showChannels()"><i class="fas fa-users"></i> Kanallar</div>
             <div class="nav-link" id="nav-subs" onclick="showSubscriptions()"><i class="fas fa-layer-group"></i> Abonelikler</div>
             <hr style="border: 0.5px solid #222; margin: 15px 0;">
             <div class="nav-link" id="nav-history" onclick="showHistory()"><i class="fas fa-history"></i> Geçmiş</div>
@@ -262,6 +272,15 @@
             <div id="home-page">
                 <h2 id="page-title" style="margin-bottom: 20px; display:none;"></h2>
                 <div class="video-grid" id="videoGrid"></div>
+            </div>
+
+            <!-- TÜM KANALLARI ARAŞTIRMA SAYFASI -->
+            <div id="channels-page">
+                <h2 style="margin-bottom: 20px; text-align: center;">Tüm Kanalları Keşfet</h2>
+                <div class="channels-search-bar">
+                    <input type="text" id="channelSearchInput" onkeyup="filterChannels()" placeholder="Kanal adı ara...">
+                </div>
+                <div class="channels-grid" id="channelsGrid"></div>
             </div>
 
             <div id="shorts-page">
@@ -291,8 +310,8 @@
                     </div>
                     
                     <div class="comments-section">
-                        <h3>Yorumlar</h3>
-                        <div class="comment-input-box">
+                        <h3 style="display:flex; align-items:center; gap:8px;">Yorumlar <span style="font-size:12px; color:var(--accent); font-weight:normal;">⚡ Canlı Senkronize</span></h3>
+                        <div class="comment-input-box" style="margin-top:15px;">
                             <input type="text" id="commentInput" placeholder="Yorum ekle...">
                             <button class="btn" onclick="postComment()">Gönder</button>
                         </div>
@@ -324,7 +343,7 @@
     <div id="resumeToast" class="resume-toast" style="display:none;">
         <div>
             <p style="font-weight:bold; font-size:14px; color:#fff;" id="resumeToastText">Kaldığınız yerden devam ediliyor</p>
-            <p style="font-size:12px; color:#aaa;">İlerlemeniz buluttan/hafızadan yüklendi</p>
+            <p style="font-size:12px; color:#aaa;">İlerlemeniz buluttan canlı yüklendi</p>
         </div>
         <button class="btn-outline" style="padding:4px 12px; font-size:12px;" onclick="resetVideoProgress()">Baştan Başla</button>
     </div>
@@ -349,7 +368,7 @@
     <div id="shortsCommentModal" class="modal">
         <div class="modal-box" style="width:500px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3>Shorts Yorumları</h3>
+                <h3>Shorts Yorumları <span style="font-size:11px; color:var(--accent);">⚡ Canlı</span></h3>
                 <i class="fas fa-times" style="cursor:pointer;" onclick="closeModals()"></i>
             </div>
             <div class="comment-input-box">
@@ -374,15 +393,14 @@
         let watchHistory = [];
         let watchProgress = {}; 
         let allVideos = [];
+        let allChannelsList = [];
         let currentPlayingId = null;
         let currentShortsCommentId = null;
         let currentVideoUploader = "";
         let currentChannelView = "";
         let viewedShorts = new Set(); 
         let shortsObserver = null;
-        let progressSaveTimeout = null;
 
-        // Loader Yönetimi
         function showLoader(msg = "Yükleniyor...") {
             document.getElementById('loader-text').innerText = msg;
             document.getElementById('global-loader').classList.remove('hidden');
@@ -417,15 +435,87 @@
             }
         }
 
-        // --- CLOUD SYNC & LOCAL STORAGE MANTIĞI ---
+        // --- ANLIK SUPABASE REALTIME CANLI SENKRONİZASYON (TÜM CİHAZLAR ARASI) ---
+        function setupRealtimeSubscriptions() {
+            // 1. ANLIK YORUM SENKRONİZASYONU
+            supabaseClient
+                .channel('realtime-comments')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => {
+                    const newComment = payload.new;
+                    if (currentPlayingId && newComment.video_id === currentPlayingId) {
+                        fetchComments(currentPlayingId);
+                    }
+                    if (currentShortsCommentId && newComment.video_id === currentShortsCommentId) {
+                        fetchShortsComments(currentShortsCommentId);
+                    }
+                })
+                .subscribe();
+
+            // 2. ANLIK BEĞENİ VE İZLENME SENKRONİZASYONU
+            supabaseClient
+                .channel('realtime-videos')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'videos' }, payload => {
+                    const updated = payload.new;
+                    const idx = allVideos.findIndex(v => v.id === updated.id);
+                    if (idx !== -1) {
+                        allVideos[idx].likes = updated.likes;
+                        allVideos[idx].views = updated.views;
+                    }
+                    if (currentPlayingId === updated.id) {
+                        const likesEl = document.getElementById('p-likes');
+                        const viewsEl = document.getElementById('p-views');
+                        if (likesEl) likesEl.innerText = updated.likes || 0;
+                        if (viewsEl) viewsEl.innerText = `${updated.views || 0} izlenme`;
+                    }
+                    const shortCount = document.getElementById(`short-like-count-${updated.id}`);
+                    if (shortCount) shortCount.innerText = updated.likes || 0;
+                })
+                .subscribe();
+
+            // 3. ANLIK GEÇMİŞ VE İLERLEME SENKRONİZASYONU (Cihazlar Arası Canlı Bulut Sync)
+            if (currentUser) {
+                supabaseClient
+                    .channel(`user-sync-${currentUser.username}`)
+                    .on('postgres_changes', { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'watch_history', 
+                        filter: `username=eq.${currentUser.username}` 
+                    }, payload => {
+                        if (payload.new && payload.new.video_data) {
+                            const newHistItem = payload.new.video_data;
+                            watchHistory = watchHistory.filter(h => h.id !== newHistItem.id);
+                            watchHistory.unshift(newHistItem);
+                            if (watchHistory.length > 30) watchHistory.pop();
+                            
+                            // Eğer kullanıcı Geçmiş sayfasındaysa anında ekranı güncelle
+                            if (document.getElementById('nav-history').classList.contains('active')) {
+                                showHistory();
+                            }
+                        }
+                    })
+                    .on('postgres_changes', { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'watch_progress', 
+                        filter: `username=eq.${currentUser.username}` 
+                    }, payload => {
+                        if (payload.new) {
+                            const { video_id, time, duration } = payload.new;
+                            watchProgress[video_id] = { time, duration };
+                        }
+                    })
+                    .subscribe();
+            }
+        }
+
+        // --- BULUT SYNC & YEREL DEPOLAMA (GEÇMİŞ & İLERLEME) ---
         async function loadUserData() {
             if (currentUser) {
-                // Giriş Yapılmışsa: Buluttan (Supabase) Yükle
                 try {
-                    // Bulut Geçmişini Getir
                     const { data: cloudHist } = await supabaseClient
                         .from('watch_history')
-                        .select('video_id, video_data, updated_at')
+                        .select('*')
                         .eq('username', currentUser.username)
                         .order('updated_at', { ascending: false });
 
@@ -435,10 +525,9 @@
                         watchHistory = JSON.parse(localStorage.getItem(`vs_history_${currentUser.username}`)) || [];
                     }
 
-                    // Bulut İlerleme Saniyelerini Getir
                     const { data: cloudProg } = await supabaseClient
                         .from('watch_progress')
-                        .select('video_id, time, duration')
+                        .select('*')
                         .eq('username', currentUser.username);
 
                     watchProgress = {};
@@ -450,17 +539,17 @@
                         watchProgress = JSON.parse(localStorage.getItem(`vs_progress_${currentUser.username}`)) || {};
                     }
                 } catch (err) {
-                    console.warn("Bulut verisi alınamadı, yerel depolama kullanılıyor:", err);
+                    console.warn("Bulut verisi okuma hatası:", err);
                     watchHistory = JSON.parse(localStorage.getItem(`vs_history_${currentUser.username}`)) || [];
                     watchProgress = JSON.parse(localStorage.getItem(`vs_progress_${currentUser.username}`)) || {};
                 }
             } else {
-                // Misafir (Guest) Kullanıcı: Sadece Yerel Depolama
                 watchHistory = JSON.parse(localStorage.getItem('vs_history_guest')) || [];
                 watchProgress = JSON.parse(localStorage.getItem('vs_progress_guest')) || {};
             }
         }
 
+        // İzleme Geçmişini Anında Supabase Bulutuna İşleme
         async function saveWatchHistory(videoObj) {
             watchHistory = watchHistory.filter(h => h.id !== videoObj.id);
             watchHistory.unshift(videoObj);
@@ -469,37 +558,33 @@
             if (currentUser) {
                 localStorage.setItem(`vs_history_${currentUser.username}`, JSON.stringify(watchHistory));
                 try {
-                    await supabaseClient.from('watch_history').upsert([{
+                    await supabaseClient.from('watch_history').upsert({
                         username: currentUser.username,
                         video_id: videoObj.id,
                         video_data: videoObj,
                         updated_at: new Date().toISOString()
-                    }], { onConflict: 'username,video_id' });
-                } catch (e) { console.warn("Cloud history save err:", e); }
+                    }, { onConflict: 'username,video_id' });
+                } catch (e) { console.warn("Bulut geçmiş kaydetme hatası:", e); }
             } else {
                 localStorage.setItem('vs_history_guest', JSON.stringify(watchHistory));
             }
         }
 
+        // Kaldığı Süreyi Anında Supabase Bulutuna İşleme
         async function saveWatchProgress(videoId, currentTime, duration) {
             watchProgress[videoId] = { time: currentTime, duration: duration };
 
             if (currentUser) {
                 localStorage.setItem(`vs_progress_${currentUser.username}`, JSON.stringify(watchProgress));
-                
-                // Performans için veritabanı isteğini 2 saniyede bir debounce et
-                clearTimeout(progressSaveTimeout);
-                progressSaveTimeout = setTimeout(async () => {
-                    try {
-                        await supabaseClient.from('watch_progress').upsert([{
-                            username: currentUser.username,
-                            video_id: videoId,
-                            time: currentTime,
-                            duration: duration,
-                            updated_at: new Date().toISOString()
-                        }], { onConflict: 'username,video_id' });
-                    } catch (e) { console.warn("Cloud progress save err:", e); }
-                }, 1500);
+                try {
+                    await supabaseClient.from('watch_progress').upsert({
+                        username: currentUser.username,
+                        video_id: videoId,
+                        time: currentTime,
+                        duration: duration,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'username,video_id' });
+                } catch (e) { console.warn("Bulut ilerleme kaydetme hatası:", e); }
             } else {
                 localStorage.setItem('vs_progress_guest', JSON.stringify(watchProgress));
             }
@@ -520,7 +605,7 @@
             const u = document.getElementById('l-user').value.trim();
             const p = document.getElementById('l-pass').value.trim();
             if(!u || !p) return alert("Bilgileri girin!");
-            showLoader("Giriş yapılıyor ve verileriniz senkronize ediliyor...");
+            showLoader("Giriş yapılıyor...");
             const { data } = await supabaseClient.from('users').select('*').eq('username', u).eq('password', p);
             
             if (data && data.length > 0) { 
@@ -541,14 +626,68 @@
             location.reload(); 
         }
 
-        // VİDEO VERİLERİNİ ÇEKME
+        // VİDEO VE KANAL VERİLERİNİ ÇEKME
         async function fetchVideos() {
-            showLoader("Videolar getiriliyor...");
+            showLoader("Uygulama hazırlanıyor...");
             const { data } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
             allVideos = data || [];
             await loadUserData();
+            setupRealtimeSubscriptions();
             hideLoader();
             if(document.getElementById('home-page').style.display !== 'none') goHome();
+        }
+
+        // --- KANALLAR SAYFASI VE KANAL ARAMA (Yükleme Ekranı Sürekli Çıkar) ---
+        async function showChannels() {
+            hideAll(); setActiveNav('nav-channels');
+            document.getElementById('channels-page').style.display = 'block';
+
+            // Kanallar sekmesine girildiğinde yükleme ekranı sürekli olarak gösterilir
+            showLoader("Kanallar yükleniyor...");
+
+            const { data: users } = await supabaseClient.from('users').select('username');
+            const uploadersFromVids = [...new Set(allVideos.map(v => v.uploader))];
+            const allUsernames = [...new Set([...(users || []).map(u => u.username), ...uploadersFromVids])];
+
+            allChannelsList = await Promise.all(allUsernames.map(async (uname) => {
+                const userVids = allVideos.filter(v => v.uploader === uname);
+                const totalViews = userVids.reduce((sum, v) => sum + (v.views || 0), 0);
+                const { count } = await supabaseClient.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_username', uname);
+                return {
+                    username: uname,
+                    views: totalViews,
+                    subs: count || 0,
+                    vidCount: userVids.length
+                };
+            }));
+
+            hideLoader();
+            renderChannels(allChannelsList);
+        }
+
+        function renderChannels(channelsArray) {
+            const grid = document.getElementById('channelsGrid');
+            if(!grid) return;
+
+            if(channelsArray.length === 0) {
+                grid.innerHTML = `<p style="color:#aaa; text-align:center; grid-column: 1/-1;">Hiç kanal bulunamadı.</p>`;
+                return;
+            }
+
+            grid.innerHTML = channelsArray.map(ch => `
+                <div class="channel-card">
+                    <div class="ch-avatar-lg" style="background:${stringToColor(ch.username)}">${ch.username[0].toUpperCase()}</div>
+                    <h3 style="color:white; font-size:18px; margin-bottom:6px;">${ch.username}</h3>
+                    <p style="color:#aaa; font-size:13px; margin-bottom:15px;">${ch.subs} Abone • ${ch.views} İzlenme</p>
+                    <button class="btn" style="width:100%; justify-content:center;" onclick="openChannel('${ch.username}')">Kanala Git</button>
+                </div>
+            `).join('');
+        }
+
+        function filterChannels() {
+            const q = document.getElementById('channelSearchInput').value.trim().toLowerCase();
+            const filtered = allChannelsList.filter(c => c.username.toLowerCase().includes(q));
+            renderChannels(filtered);
         }
 
         function getWatchPercent(videoId) {
@@ -803,7 +942,7 @@
                 document.getElementById('resumeToast').style.display = 'none';
             }
 
-            // İzleme Süresini Kaydetme
+            // İzleme Süresini Doğrudan Bulut Veritabanına Anında İşleme
             mainVideo.ontimeupdate = () => {
                 if (mainVideo.duration) {
                     saveWatchProgress(id, mainVideo.currentTime, mainVideo.duration);
@@ -902,7 +1041,6 @@
             if(!content) return;
             await supabaseClient.from('comments').insert([{ video_id: currentPlayingId, username: currentUser.username, content }]);
             document.getElementById('commentInput').value = '';
-            fetchComments(currentPlayingId);
         }
 
         async function fetchComments(videoId) {
@@ -915,7 +1053,7 @@
             `).join('');
         }
 
-        // GELİŞTİRİLMİŞ SHORTS AKIŞI, PAUSE İKONU VE GEZİNME
+        // GELİŞTİRİLMİŞ SHORTS AKIŞI
         function showShorts(targetId = null) {
             hideAll(); setActiveNav('nav-shorts');
             document.getElementById('shorts-page').style.display = 'block';
@@ -979,10 +1117,8 @@
             setupShortsKeyboardNav();
         }
 
-        // Shorts Durdurma/Oynatma ve Animasyonlu İkon Gösterimi
         function toggleShortsPlay(vid) {
             if (vid.muted) vid.muted = false;
-            
             const id = vid.getAttribute('data-id');
             const overlay = document.getElementById(`overlay-${id}`);
 
@@ -1020,9 +1156,7 @@
             }
         }
 
-        function autoNextShort(currentId) {
-            scrollShorts(1);
-        }
+        function autoNextShort(currentId) { scrollShorts(1); }
 
         function scrollShorts(direction) {
             const wrappers = Array.from(document.querySelectorAll('.short-wrapper'));
@@ -1100,7 +1234,6 @@
             if(!content || !currentShortsCommentId) return;
             await supabaseClient.from('comments').insert([{ video_id: currentShortsCommentId, username: currentUser.username, content }]);
             input.value = '';
-            fetchShortsComments(currentShortsCommentId);
         }
 
         function shareShort(id) {
@@ -1115,13 +1248,16 @@
             hideAll(); 
             document.getElementById('home-page').style.display = 'block'; 
             const results = allVideos.filter(v => v.type !== 'short' && (v.title.toLowerCase().includes(q) || v.uploader.toLowerCase().includes(q))); 
-            renderVideos(results, 'videoGrid', `"${q}" için Arama Sonuczları`); 
+            renderVideos(results, 'videoGrid', `"${q}" için Arama Sonuçları`); 
         }
 
         function showMyChannel() { if(currentUser) openChannel(currentUser.username); else alert("Önce giriş yapmalısınız!"); }
         
         function hideAll() { 
-            ['home-page', 'player-page', 'channel-page', 'shorts-page'].forEach(id => document.getElementById(id).style.display = 'none'); 
+            ['home-page', 'player-page', 'channel-page', 'shorts-page', 'channels-page'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.style.display = 'none';
+            }); 
             document.querySelectorAll('.short-video').forEach(v => v.pause());
             const mainVid = document.getElementById('mainVideo');
             if(mainVid) mainVid.pause();
