@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <!-- Ana Canlı Yeşil Gradyan -->
+    <linearGradient id="primaryGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Dış İnce Halka Gradyanı -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6EE7B7" />
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Koyu Play Simgesi Gradyanı -->
+    <linearGradient id="darkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <!-- Gelişmiş Neon Glow Efekti -->
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="28" flood-color="#10B981" flood-opacity="0.45" />
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#34D399" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Koyu Siyah Arka Plan -->
+  <rect width="800" height="800" rx="90" fill="#0B0F19" />
+
+  <!-- Logo İkon Grubu (Büyütülmüş) -->
+  <g filter="url(#neonGlow)">
+    <!-- Dış Estetik Halka -->
+    <circle cx="400" cy="330" r="230" fill="none" stroke="url(#ringGrad)" stroke-width="5" opacity="0.85" />
+    
+    <!-- Ana Yeşil Daire -->
+    <circle cx="400" cy="330" r="210" fill="url(#primaryGreen)" />
+
+    <!-- Yuvarlatılmış Büyütülmüş Play (Oynat) Simgesi -->
+    <path d="M 345, 245 C 345, 225 367, 213 384, 223 L 496, 323 C 512, 333 512, 357 496, 367 L 384, 467 C 367, 477 345, 465 345, 445 Z" fill="url(#darkGrad)" />
+  </g>
+
+  <!-- Büyütülmüş Yazı -->
+  <text x="400" y="665" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, sans-serif" font-weight="900" font-size="64" letter-spacing="1.5" fill="#FFFFFF">
+    Vid<tspan fill="#34D399">Stream</tspan>
+  </text>
+</svg>
